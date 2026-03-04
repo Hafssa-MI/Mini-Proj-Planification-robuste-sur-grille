@@ -2,19 +2,17 @@
 
 **Projet Réalisé par :** HAFSSA MIFTAH IDRISSI / SDIA 1  
 **Encadrant :** Mr MESTARI <br>
-**Date :** Mars 2026  
+**Date :** 2015/2026  
 
 ## 1. Contexte et Objectif Général
 
 Dans de nombreux systèmes réels (robotique, navigation), un agent doit atteindre une cible en minimisant un coût de déplacement, mais ses actions sont soumises à l'incertitude (glissement, panne, vent).
 
 Ce projet propose une solution hybride combinant :
-
 * **La planification déterministe (A\*) :** Pour trouver un chemin optimal sur un graphe en minimisant un coût cumulé.
 * **La modélisation stochastique (Chaînes de Markov) :** Pour évaluer la robustesse de ce chemin face à une dynamique incertaine modélisée par une matrice de transition $P$.
 
 ---
-
 
 ## 2. Structure du Projet
 
@@ -32,84 +30,79 @@ projet_planification_robuste/
 
 ---
 
+## 3. Déroulement du Projet et Modélisation
 
-## 3. Modélisation Mathématique
+### 3.1 Phase 1 — Définition du cas d’usage et génération de grilles
+* **Définir l'environnement :** L'environnement est une grille 2D où chaque cellule libre est un état $n \in S$. Nous définissons les obstacles, l'état de départ $s_0$ et l'état cible $g$ (GOAL).
+* **Définir le modèle de coût :** Le coût accumulé depuis l'état initial est $g(n)$, défini ici avec un coût uniforme de 1 par déplacement.
+* **Niveau d'incertitude :** Fixation du taux d'erreur $\epsilon$ pour simuler l'incertitude des mouvements de l'agent (avec des variantes : faible, moyen, fort).
 
-### 3.1 Espace d'états et Planification (A\*)
-L'environnement est une grille 2D où chaque cellule libre est un état $n \in S$. La recherche heuristique utilise la fonction d'évaluation :
-$$f(n)=g(n)+h(n)$$
-* $g(n)$ : Coût accumulé depuis l'état initial $s_0$ (coût uniforme de 1 par déplacement).
-* $h(n)$ : Estimation du coût restant vers le but $g$. Nous utilisons la distance de Manhattan.
+<br>
+<img width="727" height="770" alt="image" src="https://github.com/user-attachments/assets/b6730097-7859-4e53-8015-3cb9ea7871fe" />
+<br>
 
-**Discussion sur l'heuristique (Admissibilité et Cohérence) :**
-La distance de Manhattan est admissible car elle ne surestime jamais le coût réel pour atteindre la cible (elle suppose un chemin parfait sans obstacles). Elle est également cohérente car elle respecte l'inégalité triangulaire : $h(n) \le c(n, n') + h(n')$. C'est cette cohérence qui garantit que le premier chemin trouvé par A\* vers un état est le chemin optimal, évitant ainsi de rouvrir des nœuds dans la liste CLOSED.
-
-### 3.2 Modèle Stochastique (Chaîne de Markov)
-L'agent suit le plan généré par A\*, mais ses actions sont perturbées par un taux d'erreur $\epsilon$ :
-* Probabilité de $1-\epsilon$ de suivre l'action recommandée.
-* Probabilité de $\epsilon/2$ de dévier sur chaque côté latéral.
-* En cas de collision avec un obstacle, l'agent reste sur sa case.
+---
 
 
+### 3.2 Phase 2 — Planification déterministe avec A\*
+* **Implémentation A\* :** Implémentation de l'algorithme sur la grille (avec OPEN = heap, CLOSED = set). La recherche utilise la fonction d'évaluation $f(n) = g(n) + h(n)$, où $h(n)$ est la distance de Manhattan.
+* **Discussion sur l'heuristique :** La distance de Manhattan est admissible car elle ne surestime jamais le coût réel (elle suppose un chemin parfait sans obstacles). Elle est également cohérente (h(n) = c(n, n') + h(n')), garantissant que le premier chemin trouvé est optimal sans rouvrir la liste CLOSED.
+* **Comparaison des algorithmes :** Nous avons comparé A\* avec Uniform Cost Search (UCS, où $f=g$) et Greedy Search (où $f=h$).
+* **Mesures et Résultats :** **Analyse :** UCS explore uniformément dans toutes les directions, ce qui sature la mémoire. Greedy fonce vers la cible mais se fait piéger par les obstacles. A\* offre le compromis parfait : il est guidé par l'heuristique tout en garantissant le chemin le plus court.
 
-L'évolution de la distribution de probabilité sur les états est donnée par l'équation de Chapman-Kolmogorov :
-$$\pi^{(n)}=\pi^{(0)}P^n$$
-Où $P$ est la matrice stochastique de transition.
+<br>
+<img width="759" height="574" alt="image" src="https://github.com/user-attachments/assets/1d7502ec-ce71-4348-bfc3-2a9843d7aa25" />
+<br>
 
 
 ---
 
 
-## 4. Expériences et Résultats
+### 3.3 Phase 3 — Construction de la chaîne de Markov induite
+À partir du chemin planifié par A\*, on définit une politique (action recommandée à chaque état). En introduisant l'incertitude $\epsilon$, l'agent a une probabilité de $1-\epsilon$ de suivre l'action, et $\epsilon/2$ de dévier latéralement. En cas de collision avec un obstacle, l'agent reste sur sa case.
 
-### 4.1 Comparaison des Algorithmes Déterministes (E.1 & E.3)
-Nous avons comparé UCS ($f=g$), Greedy ($f=h$) et A\* ($f=g+h$) sur une grille contenant des obstacles.
+* **Matrice de transition :** Construction de la matrice $P$ sur les états accessibles (cases libres + GOAL + FAIL si sortie de politique).
+* **Vérification :** Contrôle systématique pour s'assurer que $P$ est bien une matrice stochastique (la somme de chaque ligne vaut 1).
+* **Évolution temporelle :** Calcul de $\pi^{(n)} = \pi^{(0)}P^n$ par l'équation de Chapman-Kolmogorov pour estimer la probabilité d'être dans l'état GOAL à l'instant $n$.
 
-**Analyse :** UCS explore uniformément dans toutes les directions, ce qui sature la mémoire. Greedy fonce vers la cible mais se fait piéger par les obstacles (chemin non optimal). A\* offre le compromis parfait : il est guidé par l'heuristique tout en garantissant le chemin le plus court grâce au coût $g$.
-
-*[Insérer ici une capture d'écran d'un graphique en barres comparant les nœuds explorés]*
-
-### 4.2 Impact de l'Incertitude et Validation Monte-Carlo (E.2)
-Nous avons fixé le chemin A\* et fait varier le taux d'erreur $\epsilon \in \{0, 0.1, 0.2, 0.3\}$. Nous comparons le calcul matriciel exact ($\pi^{(n)}$) avec une simulation empirique Monte-Carlo (1000 trajectoires).
-
-**Résultats :**
-
-*[Insérer ici la courbe superposant la probabilité théorique et empirique en fonction de $\epsilon$]*
-
-**Analyse :** La théorie et la pratique se superposent parfaitement, validant la construction de notre matrice $P$. On observe que si le chemin A\* rase les obstacles, une légère augmentation de $\epsilon$ fait chuter drastiquement les chances de survie de l'agent.
 
 ---
 
-##  5. Analyse Markovienne Approfondie (Phase 4)
 
-### 5.1 Classes de communication
-Notre chaîne de Markov contient plusieurs types d'états :
-* **États transitoires :** Les cases libres de la grille. L'agent finira par les quitter définitivement.
-* **États absorbants :** La case GOAL ($p_{ii} = 1$) et éventuellement une case FAIL (erreur fatale/sortie de politique). Ce sont des classes communicantes fermées réduites à un seul état.
+### 3.4 Phase 4 — Analyse Markov (graphe, classes, absorption, période)
+* **Graphe orienté :** Construction du graphe des transitions où un arc $i \to j$ existe si $p_{ij} > 0$.
+* **Classes de communication :**
+  * **États transitoires :** Les cases libres de la grille (l'agent finira par les quitter).
+  * **États absorbants / persistants :** La case GOAL ($p_{ii} = 1$) et la case FAIL. Ce sont des classes communicantes fermées réduites à un seul état.
+* **Analyse de l'Absorption :** Puisque GOAL et FAIL sont absorbants, nous décomposons $P$ sous sa forme canonique :
 
-### 5.2 Analyse de l'Absorption
-Pour étudier le temps moyen avant que l'agent n'atteigne le but (ou n'échoue), nous décomposons la matrice $P$ sous sa forme canonique :
+$$P = \begin{pmatrix} I & 0 \\\\ R & Q \end{pmatrix}$$
 
-$$P = \begin{pmatrix} I & 0 \\ R & Q \end{pmatrix}$$
+Nous calculons la matrice fondamentale $N = (I - Q)^{-1}$. L'entrée $n_{ij}$ donne le nombre moyen de passages par $j$ depuis $i$. Le temps moyen d'absorption s'obtient via $t = N \cdot \mathbf{1}$. *(Exemple : Pour epsilon = 0.1, le temps moyen théorique est de 9.003 pas).*
+* **Périodicité :** La sous-chaîne est apériodique car les états absorbants bouclent sur eux-mêmes (période 1), de même que les collisions contre les murs depuis les états transitoires.
 
-En extrayant la sous-matrice $Q$ (transitions entre états transitoires), nous calculons la matrice fondamentale $N$ :
-
-$$N = (I - Q)^{-1}$$
-
-L'entrée $n_{ij}$ de $N$ donne le nombre moyen de passages par l'état $j$ sachant qu'on part de $i$. Le temps moyen d'absorption s'obtient via $t = N \cdot \mathbf{1}$.
-
-*(Exemple de résultat : Pour $\epsilon = 0.1$, le temps moyen calculé mathématiquement depuis le départ jusqu'à l'absorption est de X pas).*
 
 ---
 
-## 6. Limites et Pistes d'Amélioration
+
+### 3.5 Phase 5 — Simulation Monte-Carlo et validation
+* **Simulation de trajectoires :** Nous simulons empiriquement $N=1000$ trajectoires Markov à partir de $s_0$ en respectant la politique et les probabilités.
+* **Estimations empiriques :** Récolte des données sur la probabilité d'atteindre le GOAL, la distribution du temps d'atteinte et le taux d'échec.<br>
+* **Validation croisée (Théorie vs Pratique) :** Nous comparons le calcul matriciel exact $\pi^{(n)}$ avec la simulation Monte-Carlo pour différents taux d'erreur $\epsilon \in \{0, 0.1, 0.2, 0.3\}$.
+**Analyse :** La théorie et la pratique se superposent parfaitement, validant la construction de notre matrice $P$. On observe que si le chemin A\* rase les obstacles, une légère augmentation de $\epsilon$ fait chuter drastiquement les chances de survie.
+<br>
+<img width="728" height="473" alt="image" src="https://github.com/user-attachments/assets/9daf7d66-5d18-4c2a-99cb-2987e8d80eb3" />
+<br>
+
+
+---
+
+## 4. Limites et Pistes d'Amélioration
 
 Bien que performante pour l'analyse, cette approche présente des limites conceptuelles :
 
 * **Planification rigide :** A\* produit un chemin fixe. Dans un environnement incertain, si l'agent dévie de ce chemin, notre modèle actuel considère souvent qu'il échoue (état FAIL) ou tente de revenir sur ses pas aveuglément.
-* **Mémoire :** Si la grille devient immense, la matrice $P$ de taille $|S| \times |S|$ devient trop lourde à stocker et à inverser mathématiquement pour calculer l'absorption.
+* **Explosion de la mémoire :** Si la grille devient immense, la matrice $P$ de taille $|S| \times |S|$ devient trop lourde à stocker et à inverser mathématiquement pour calculer l'absorption.
 
 **Pistes d'amélioration (Re-planification et MDP) :**
 Plutôt que de calculer un chemin déterministe puis de subir l'incertitude, il serait plus pertinent d'utiliser des Processus de Décision Markoviens (MDP) via l'algorithme de Value Iteration. Cela permettrait de générer une politique universelle, où l'agent sait exactement quelle action prendre depuis n'importe quelle case de la grille pour maximiser ses probabilités de survie.
-
-
