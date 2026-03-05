@@ -97,12 +97,22 @@ Nous calculons la matrice fondamentale $N = (I - Q)^{-1}$. L'entrée $n_{ij}$ do
 
 ---
 
-## 4. Limites et Pistes d'Amélioration
+## 4. Bilan des Expériences
 
-Bien que performante pour l'analyse, cette approche présente des limites conceptuelles :
+* **Impact de la complexité:** Les tests menés sur trois configurations de grilles (facile, moyenne, difficile) confirment que plus la grille est complexe (nombreux obstacles), plus les algorithmes non-informés (UCS) ou trop gloutons (Greedy) saturent en mémoire ou tombent dans des impasses, là où A* reste robuste.
+* **Impact de l'heuristique:** L'algorithme UCS équivaut à un algorithme A* avec une heuristique nulle ($h=0$). Le comparer à A* avec la distance de Manhattan met en évidence l'intérêt fondamental de l'heuristique : une réduction drastique du nombre de nœuds développés (expansions) pour un même résultat optimal.
 
-* **Planification rigide :** A\* produit un chemin fixe. Dans un environnement incertain, si l'agent dévie de ce chemin, notre modèle actuel considère souvent qu'il échoue (état FAIL) ou tente de revenir sur ses pas aveuglément.
-* **Explosion de la mémoire :** Si la grille devient immense, la matrice $P$ de taille $|S| \times |S|$ devient trop lourde à stocker et à inverser mathématiquement pour calculer l'absorption.
+---
 
-**Pistes d'amélioration (Re-planification et MDP) :**
-Plutôt que de calculer un chemin déterministe puis de subir l'incertitude, il serait plus pertinent d'utiliser des Processus de Décision Markoviens (MDP) via l'algorithme de Value Iteration. Cela permettrait de générer une politique universelle, où l'agent sait exactement quelle action prendre depuis n'importe quelle case de la grille pour maximiser ses probabilités de survie.
+## 5. Conclusion Générale et Pistes d'Amélioration
+
+Ce projet nous a permis de quantifier la frontière entre un plan théoriquement parfait et sa viabilité dans un environnement réel.
+
+* **Intérêt et garanties des heuristiques :** L'utilisation de A* démontre qu'une heuristique bien choisie réduit considérablement l'espace d'exploration de l'algorithme. La distance de Manhattan garantit l'optimalité du chemin trouvé car elle est **admissible** (ne surestime jamais le coût) et **cohérente** (respecte l'inégalité triangulaire, évitant les ré-évaluations redondantes).
+* **Impact de l'incertitude markovienne :** L'intégration de l'incertitude ($\epsilon$) via les chaînes de Markov prouve qu'un plan déterministe est fragile. Le chemin le plus court prévu par A* frôle souvent les obstacles : une légère incertitude le transforme alors en un chemin à haut risque.
+* **Prévision vs Réalité probabiliste :** Il existe une dichotomie forte entre le coût optimal déterministe (le chemin parfait généré par A*) et la performance probabiliste réelle (mise en évidence par les calculs $\pi^{(n)}$ et Monte-Carlo). Poursuivre aveuglément un plan fixe dans un environnement stochastique mène souvent à l'échec.
+
+**Pistes d'amélioration futures :**
+1. **Re-planification et politiques globales :** Remplacer le cheminement fixe par des Processus de Décision Markoviens (MDP - *Value Iteration*) pour doter l'agent d'une politique universelle, sachant réagir face à toute déviation.
+2. **Gestion de la mémoire :** Pour des grilles immenses, A* ou la matrice $P$ (de taille $|S| \times |S|$) deviennent trop gourmands. Implémenter des variantes d'A* à mémoire bornée comme **IDA\*** (Iterative Deepening A*) ou **SMA\*** (Simplified Memory Bounded A*) serait pertinent.
+3. **Heuristiques apprises :** Utiliser des techniques de Machine Learning (Reinforcement Learning) pour faire apprendre à l'agent ses propres heuristiques adaptées à des environnements stochastiques spécifiques.
