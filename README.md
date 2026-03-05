@@ -88,7 +88,7 @@ Nous calculons la matrice fondamentale $N = (I - Q)^{-1}$. L'entrée $n_{ij}$ do
 ### 3.5 Phase 5 — Simulation Monte-Carlo et validation
 * **Simulation de trajectoires :** Nous simulons empiriquement $N=1000$ trajectoires Markov à partir de $s_0$ en respectant la politique et les probabilités.
 * **Estimations empiriques :** Récolte des données sur la probabilité d'atteindre le GOAL, la distribution du temps d'atteinte et le taux d'échec.<br>
-* **Validation croisée (Théorie vs Pratique) :** Nous comparons le calcul matriciel exact $\pi^{(n)}$ avec la simulation Monte-Carlo pour différents taux d'erreur $\epsilon \in \{0, 0.1, 0.2, 0.3\}$.
+* **Validation croisée (Théorie vs Pratique) :** Nous comparons le calcul matriciel exact $\pi^{(n)}$ avec la simulation Monte-Carlo pour différents taux d'erreur $\epsilon \in \{0, 0.1, 0.2, 0.3\}$. <br>
 **Analyse :** La théorie et la pratique se superposent parfaitement, validant la construction de notre matrice $P$. On observe que si le chemin A\* rase les obstacles, une légère augmentation de $\epsilon$ fait chuter drastiquement les chances de survie.
 <br>
 <img width="728" height="473" alt="image" src="https://github.com/user-attachments/assets/9daf7d66-5d18-4c2a-99cb-2987e8d80eb3" />
