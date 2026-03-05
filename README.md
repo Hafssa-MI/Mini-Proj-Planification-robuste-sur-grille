@@ -25,7 +25,8 @@ projet_planification_robuste/
 ├── markov.py           # Module stochastique (Construction de la matrice P, P^n, Absorption)
 ├── simulation.py       # Module de validation empirique (Simulation de Monte-Carlo)
 ├── experiments.ipynb   # Le Notebook principal regroupant les tests, les graphiques et l'analyse
-└── README.md           # Ce rapport de projet
+├── README.md
+└── rapport.pdf          
 ```
 
 ---
